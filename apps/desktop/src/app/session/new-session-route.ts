@@ -8,10 +8,16 @@ import {
   captureNewChatSource,
   ensureGatewayAgent,
   ensureGatewayProfile,
+  invalidateNewChatIntent,
   pinLegacyNewChatProfile
 } from '@/store/profile'
-import { $projectScope, ALL_PROJECTS } from '@/store/projects'
-import { isPeerInstanceWindow, isProfilePinnedWindow, windowConnectionOverride, windowProfileOverride } from '@/store/windows'
+import { $projectScope, ALL_PROJECTS } from '@/store/project-scope'
+import {
+  isPeerInstanceWindow,
+  isProfilePinnedWindow,
+  windowConnectionOverride,
+  windowProfileOverride
+} from '@/store/windows'
 
 /** Only generic New Session actions consult this preference. Explicit profile,
  * agent, project and existing-session actions keep their captured owner. */
@@ -41,6 +47,7 @@ export function defaultNewSessionTarget(): { profile: string; route: AgentProfil
 }
 
 export function prepareDefaultNewSession(): void {
+  invalidateNewChatIntent()
   const target = defaultNewSessionTarget()
 
   if (!target) {

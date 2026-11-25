@@ -3,6 +3,7 @@ import './tooltip.css'
 import { Tooltip as TooltipPrimitive } from 'radix-ui'
 import * as React from 'react'
 
+import { usePopoverPortalContainer } from '@/components/ui/dialog-portal-context'
 import { useI18n } from '@/i18n'
 import { type InputModality, lastInputModality } from '@/lib/input-modality'
 import { useKeybindHint } from '@/lib/keybinds/use-keybind-hint'
@@ -151,8 +152,10 @@ function hasLayout(element: Element | null): boolean {
 }
 
 function TooltipContent(props: TooltipContentProps) {
+  const container = usePopoverPortalContainer(undefined, 'tooltip')
+
   return (
-    <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Portal container={container}>
       <PaneClippedContent {...props} />
     </TooltipPrimitive.Portal>
   )
@@ -170,7 +173,7 @@ function PaneClippedContent({
   className,
   collisionBoundary,
   collisionPadding = 12,
-  hideWhenDetached = true,
+  hideWhenDetached,
   placement = 'control',
   boundary = placement === 'control' || placement === 'toolbar' ? 'pane' : 'viewport',
   side,
@@ -218,7 +221,12 @@ function PaneClippedContent({
       collisionBoundary={collisionBoundary ?? pane ?? undefined}
       collisionPadding={collisionPadding}
       data-slot="tooltip-content"
-      hideWhenDetached={hideWhenDetached}
+      // Radix's `collisionPadding` also insets the hide middleware's clip box, so
+      // a 7px rail tick drawn flush against the strip's edge reads as scrolled
+      // out and mounts hidden — a mark that looks dead on hover (#115723). Rail
+      // ticks unmount when scrolled away, so the middleware has nothing to hide
+      // there; leave it to triggers that stay put inside scrolling lists.
+      hideWhenDetached={hideWhenDetached ?? (placement !== 'left-rail' && placement !== 'right-rail')}
       side={side ?? preferred.side}
       sideOffset={sideOffset}
       {...props}

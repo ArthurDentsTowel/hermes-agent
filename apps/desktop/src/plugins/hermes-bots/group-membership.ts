@@ -104,6 +104,19 @@ export function groupSessionMemberKey(key: string): string {
   return boundary === -1 ? rest : rest.slice(boundary + 2)
 }
 
+/** The thread half of a session key; bare (pre-thread) keys belong to the
+ *  `legacy` thread, the same name their turns run under. */
+export function groupSessionThread(key: string): string {
+  if (!key.startsWith(GROUP_SESSION_THREAD_PREFIX)) {
+    return 'legacy'
+  }
+
+  const rest = key.slice(GROUP_SESSION_THREAD_PREFIX.length)
+  const boundary = rest.indexOf('::')
+
+  return (boundary === -1 ? rest : rest.slice(0, boundary)) || 'legacy'
+}
+
 /** Whether this member already owns a thread-scoped session anywhere in the
  *  room — i.e. the room has been through the pre-thread migration. */
 export function hasThreadScopedGroupSession(sessions: Record<string, unknown>, memberKey: string): boolean {
@@ -411,6 +424,15 @@ export function durableGroupChatMembers(bots: RosterRow[]): GroupMember[] {
     return {
       name: bot.name,
       handle: botHandle(bot.name, bot) || bot.handle || bot.name,
+      // The stored handle alone cannot say why a default is not @hermes, and
+      // botHandle re-derives 'hermes' for it: keep the claim, or a room whose
+      // live row is gone tells two bots they are both @hermes. A live row
+      // (groupChatMemberBots prefers it) recomputes this from the roster.
+      ...(bot.hermesHandleTaken
+        ? {
+            hermesHandleTaken: true
+          }
+        : {}),
       ...(title
         ? {
             title

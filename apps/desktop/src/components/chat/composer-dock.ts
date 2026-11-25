@@ -13,7 +13,15 @@ const composerFillTransition = 'transition-[background-color] duration-150 ease-
  *  off this hot path so typing does not re-blur the transcript each frame. */
 export const composerInputSurface = cn(composerFill, composerFillTransition)
 // The `-z-10` paint layer behind the editable surface; hydrated and fallback composers share it.
-export const composerInputBacking = cn('pointer-events-none absolute inset-0 -z-10 rounded-[inherit]', composerInputSurface)
+export const composerInputBacking = cn(
+  'pointer-events-none absolute inset-0 -z-10 rounded-[inherit]',
+  composerInputSurface
+)
+
+/** The composer surface's hairline ring. Plugin composers (Bot Mode rooms) wear it too,
+ *  so every input surface in the app reads as the same composer. */
+export const composerSurfaceRing =
+  'border border-[color-mix(in_srgb,var(--dt-composer-ring)_calc(18%*var(--composer-ring-strength)),var(--dt-input))]'
 
 /** Backdrop treatment for non-input composer chrome. Harmless when the fill
  *  goes opaque (drawer open) — nothing shows through to blur. */
